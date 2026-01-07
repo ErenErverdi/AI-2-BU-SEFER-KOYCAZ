@@ -1,0 +1,53 @@
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+df = pd.read_csv('airline_food_data_last.csv')
+
+print("--- 1. Veri Seti Genel Bilgisi ---")
+print(df.info())
+
+print("\n--- 2. Eksik Veri Kontrolü ---")
+print(df.isnull().sum())
+
+print("\n--- 3. Temel İstatistikler ---")
+print(df.describe().T)
+
+sns.set(style="whitegrid")
+
+plt.figure(figsize=(10, 8))
+correlation = df.drop('flight_id', axis=1).corr()
+sns.heatmap(correlation, annot=True, cmap='coolwarm', fmt=".2f", linewidths=0.5)
+plt.title('Correlation Matrix')
+plt.show()
+
+plt.figure(figsize=(10, 6))
+sns.histplot(df['total_food_demand'], kde=True, color='blue')
+plt.title('Total Food Demand Distribution')
+plt.xlabel('Food Amount')
+plt.ylabel('Frequency')
+plt.show()
+
+plt.figure(figsize=(10, 6))
+sns.scatterplot(x='passenger_count', y='total_food_demand', data=df, palette='viridis')
+plt.title('Relationship Between Passenger Numbers and Food Demand')
+plt.xlabel('Number of Passengers')
+plt.ylabel('Food Request')
+plt.show()
+
+plt.figure(figsize=(10, 6))
+df['duration_rounded'] = df['flight_duration'].round()
+
+sns.lineplot(
+    x='duration_rounded',
+    y='total_food_demand',
+    data=df,
+    color='purple',
+    linewidth=2.5
+)
+
+plt.title('Average Food Demand Based on Flight Duration')
+plt.xlabel('Flight Duration')
+plt.ylabel('Average Food Demand')
+plt.grid(True, alpha=0.3)
+plt.show()
