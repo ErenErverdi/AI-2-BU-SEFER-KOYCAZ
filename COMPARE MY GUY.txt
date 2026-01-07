@@ -1,0 +1,62 @@
+# --- TASK 5: Model Comparison & Error Analysis ---
+
+# 1. Gather Metrics
+# We collect the metrics from the previous tasks.
+# Note: 'y_pred' comes from the Linear Regression cell (Cell 3)
+#       'y_pred_rf' comes from the Random Forest cell (Cell 5)
+#       'y_pred_baseline' comes from the Baseline cell (Cell 1)
+
+# Baseline Metrics
+baseline_r2 = r2_score(y_test, y_pred_baseline)
+baseline_mae = mean_absolute_error(y_test, y_pred_baseline)
+baseline_rmse = np.sqrt(mean_squared_error(y_test, y_pred_baseline))
+
+# Linear Regression Metrics
+lr_r2 = r2_score(y_test, y_pred)
+lr_mae = mean_absolute_error(y_test, y_pred)
+lr_rmse = np.sqrt(mean_squared_error(y_test, y_pred))
+
+# Random Forest Metrics
+rf_r2 = r2_score(y_test, y_pred_rf)
+rf_mae = mean_absolute_error(y_test, y_pred_rf)
+rf_rmse = np.sqrt(mean_squared_error(y_test, y_pred_rf))
+
+# 2. Create Comparison Table
+comparison_data = {
+    'Model': ['Baseline (Mean)', 'Linear Regression', 'Random Forest'],
+    'R² Score': [baseline_r2, lr_r2, rf_r2],
+    'MAE': [baseline_mae, lr_mae, rf_mae],
+    'RMSE': [baseline_rmse, lr_rmse, rf_rmse]
+}
+
+df_comparison = pd.DataFrame(comparison_data)
+
+# Sort by R² to show the best model on top
+df_comparison = df_comparison.sort_values(by='R² Score', ascending=False)
+
+print("\n=== Model Performance Comparison ===")
+print(df_comparison.round(4).to_string(index=False))
+
+# 3. Residual Analysis (Best Model: Random Forest)
+# We analyze the errors (residuals) of our best model to see if they are normally distributed.
+residuals = y_test - y_pred_rf
+
+plt.figure(figsize=(10, 6))
+sns.histplot(residuals, kde=True, bins=30, color='purple')
+plt.title('Distribution of Prediction Errors (Residuals) - Random Forest')
+plt.xlabel('Error (Actual Demand - Predicted Demand)')
+plt.ylabel('Frequency')
+plt.axvline(x=0, color='red', linestyle='--', linewidth=2, label='Zero Error')
+plt.legend()
+plt.grid(axis='y', alpha=0.5)
+plt.show()
+
+# Optional: Residual Plot (Predicted vs Residuals) to check for patterns
+plt.figure(figsize=(10, 6))
+plt.scatter(y_pred_rf, residuals, alpha=0.5, color='darkgreen')
+plt.axhline(y=0, color='red', linestyle='--', linewidth=2)
+plt.title('Residual Plot: Predicted Values vs. Errors')
+plt.xlabel('Predicted Food Demand')
+plt.ylabel('Residuals (Error)')
+plt.grid(True, alpha=0.5)
+plt.show()
