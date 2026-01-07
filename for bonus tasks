@@ -1,0 +1,74 @@
+from sklearn.ensemble import GradientBoostingRegressor
+from sklearn.model_selection import GridSearchCV
+
+print("\n" + "="*40)
+print("       BONUS BÖLÜMÜ (+15 PUAN)       ")
+print("="*40)
+
+# --- BONUS 1: Business Cost Analysis (+2 Puan) ---
+# Formül: Fazla tahmin (yemek çöpe gider) = 5$ ceza
+#         Eksik tahmin (yolcu aç kalır)   = 20$ ceza (Daha pahalı çünkü müşteri kızar)
+
+def calculate_business_cost(y_true, y_pred):
+    cost = 0
+    y_true = np.array(y_true)
+    y_pred = np.array(y_pred)
+    
+    for actual, predicted in zip(y_true, y_pred):
+        diff = predicted - actual
+        if diff > 0:
+            # OverPrediction (Fazla Yemek): 5$ ceza
+            cost += diff * 5
+        elif diff < 0:
+            # UnderPrediction (Eksik Yemek): 20$ ceza
+            # diff negatif olduğu için mutlak değerini alıyoruz (veya - ile çarpıyoruz)
+            cost += abs(diff) * 20
+            
+    return cost
+
+# Senin Linear Regression modelinin maliyetini hesaplayalım
+lr_cost = calculate_business_cost(y_test, y_pred) # y_pred senin LR tahminlerindi
+print(f"\n[+2 Puan] Linear Regression İş Maliyeti: ${lr_cost:,.2f}")
+
+
+# --- BONUS 2 & 3: Üçüncü Model + Tuning (+13 Puan) ---
+# Model: Gradient Boosting Regressor (Random Forest ve Linear'dan farklı 3. model)
+
+print("\n[+13 Puan] 3. Model (Gradient Boosting) ve Hyperparameter Tuning Başlıyor...")
+
+# 1. Modeli Tanımla
+gb_model = GradientBoostingRegressor(random_state=42)
+
+# 2. Denenecek Ayarlar (Hyperparameters)
+# Grid Search bu ayarların hepsini tek tek deneyip en iyisini bulacak.
+param_grid = {
+    'n_estimators': [100, 200],      # Ağaç sayısı
+    'learning_rate': [0.01, 0.1],    # Öğrenme hızı
+    'max_depth': [3, 5]              # Ağaç derinliği
+}
+
+# 3. GridSearchCV ile En İyiyi Ara
+grid_search = GridSearchCV(estimator=gb_model, param_grid=param_grid, 
+                           cv=3, n_jobs=-1, scoring='neg_mean_squared_error')
+
+grid_search.fit(X_train, y_train)
+
+# 4. En İyi Sonucu Al
+best_gb_model = grid_search.best_estimator_
+print(f"En İyi Parametreler: {grid_search.best_params_}")
+
+# 5. Test Et
+gb_pred = best_gb_model.predict(X_test)
+gb_rmse = np.sqrt(mean_squared_error(y_test, gb_pred))
+gb_cost = calculate_business_cost(y_test, gb_pred)
+
+print(f"Gradient Boosting RMSE: {gb_rmse:.4f}")
+print(f"Gradient Boosting İş Maliyeti: ${gb_cost:,.2f}")
+
+# Karşılaştırma Yorumu
+print("\n--- SONUÇ ---")
+if gb_cost < lr_cost:
+    print("Tebrikler! Tuning yapılmış Gradient Boosting modeli, şirketin maliyetini düşürdü.")
+    print(f"Kazanç: ${lr_cost - gb_cost:,.2f}")
+else:
+    print("Linear Regression maliyet açısından hala rekabetçi.")
